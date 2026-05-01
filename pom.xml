@@ -4,19 +4,27 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
     <groupId>com.tabariyya</groupId>
     <artifactId>spring-authentication</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <java.version>8</java.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jjwt.version>0.11.5</jjwt.version>
     </properties>
 
-    <name>spring-exporter</name>
-    <description>used for easy exporting to csv and other formats</description>
-
+    <name>spring-authentication</name>
+    <description>Authentication library supporting local and LDAP strategies with JWT</description>
 
     <licenses>
         <license>
@@ -34,22 +42,70 @@
         </developer>
     </developers>
 
-    <url>https://github.com/tabariyya/spring-exporter.git</url>
+    <url>https://github.com/tabariyya/spring-authentication.git</url>
 
     <scm>
-        <url>https://github.com/tabariyya/spring-exporter</url>
-        <connection>scm:git:git://github.com/tabariyya/spring-exporter.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:tabariyya/spring-exporter.git</developerConnection>
+        <url>https://github.com/tabariyya/spring-authentication</url>
+        <connection>scm:git:git://github.com/tabariyya/spring-authentication.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:tabariyya/spring-authentication.git</developerConnection>
     </scm>
 
-
     <dependencies>
+
+        <!-- Internal utils artifact (JWT + Mail utilities) -->
         <dependency>
             <groupId>com.tabariyya</groupId>
             <artifactId>utils</artifactId>
             <version>1.0.0</version>
         </dependency>
-    </dependencies>
 
+        <!-- Spring Web (ResponseEntity, HttpStatus, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Security (PasswordEncoder) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Bean Validation (javax.validation) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- JavaMail (javax.mail) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- JJWT API -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+
+        <!-- JJWT implementation (runtime) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JJWT Jackson serialization (runtime) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
 
 </project>

@@ -1,20 +1,27 @@
 package com.tabariyya.authentication.services;
 
+import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
+import com.tabariyya.authentication.dto.login.LoginRequest;
+import com.tabariyya.authentication.dto.login.LoginResponse;
+import com.tabariyya.authentication.dto.register.RegisterResponse;
+import com.tabariyya.authentication.dto.renewal.RenewRequest;
+import com.tabariyya.authentication.dto.renewal.RenewResponse;
 import com.tabariyya.authentication.models.BaseUser;
 import com.tabariyya.utils.jwt.JwtConsumer;
 import com.tabariyya.utils.jwt.JwtProducer;
 import com.tabariyya.utils.jwt.TokenType;
 import io.jsonwebtoken.Claims;
-import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.mail.MessagingException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public abstract class BaseAuthService<T extends BaseUser> {
 
@@ -58,7 +65,9 @@ public abstract class BaseAuthService<T extends BaseUser> {
 
         int userId = jwtConsumer.extractClaims(request.refreshToken()).payload().get(Claims.SUBJECT).getAsInt();
 
-        T user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        T user = userRepository.findById(userId).orElseThrow(
+                (Supplier<ResponseStatusException>) () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        );
 
         String accessToken = generateAccessToken(user);
         return ResponseEntity.ok(new RenewResponse(accessToken));
@@ -92,4 +101,3 @@ public abstract class BaseAuthService<T extends BaseUser> {
     }
 
 }
-

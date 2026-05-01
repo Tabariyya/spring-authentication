@@ -1,12 +1,12 @@
 package com.tabariyya.authentication.services;
 
-import com.waleed.springutils.auth.dto.forgotpassword.ForgotPasswordRequest;
-import com.waleed.springutils.auth.dto.login.LoginRequest;
-import com.waleed.springutils.auth.dto.login.LoginResponse;
-import com.waleed.springutils.auth.dto.register.RegisterResponse;
-import com.waleed.springutils.auth.models.BaseUser;
-import com.waleed.utils.jwt.JwtConsumer;
-import com.waleed.utils.jwt.JwtProducer;
+import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
+import com.tabariyya.authentication.dto.login.LoginRequest;
+import com.tabariyya.authentication.dto.login.LoginResponse;
+import com.tabariyya.authentication.dto.register.RegisterResponse;
+import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.utils.jwt.JwtConsumer;
+import com.tabariyya.utils.jwt.JwtProducer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,7 +18,7 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
 
     private final BaseLdapRepository<T> ldapRepository;
 
-    public LdapAuthService(BaseUserRepository<T>  userRepository,
+    public LdapAuthService(BaseUserRepository<T> userRepository,
                            PasswordEncoder passwordEncoder,
                            JwtConsumer jwtConsumer,
                            JwtProducer jwtProducer,
@@ -37,7 +37,7 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
         }
 
         Optional<T> dbUser = userRepository.findByUserName(request.userName());
-        if (dbUser.isEmpty()) {
+        if (!dbUser.isPresent()) {
             user.setCreatedAt(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(request.password()));
             userRepository.save(user);
@@ -54,9 +54,8 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
     }
 
     @Override
-    public ResponseEntity<Void> emailAuthentication(String email){
+    public ResponseEntity<Void> emailAuthentication(String email) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
-
     }
 
 
@@ -69,6 +68,5 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
     public ResponseEntity<?> resetPassword(String newPassword, int userId) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
-
 
 }

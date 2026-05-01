@@ -1,15 +1,15 @@
 package com.tabariyya.authentication.services;
 
-import com.waleed.springutils.auth.config.MailTemplateConfig;
-import com.waleed.springutils.auth.dto.forgotpassword.ForgotPasswordRequest;
-import com.waleed.springutils.auth.dto.login.LoginRequest;
-import com.waleed.springutils.auth.dto.login.LoginResponse;
-import com.waleed.springutils.auth.dto.register.RegisterResponse;
-import com.waleed.springutils.auth.models.BaseUser;
-import com.waleed.utils.jwt.JwtConsumer;
-import com.waleed.utils.jwt.JwtProducer;
-import com.waleed.utils.jwt.TokenType;
-import com.waleed.utils.mail.MailUtils;
+import com.tabariyya.authentication.config.MailTemplateConfig;
+import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
+import com.tabariyya.authentication.dto.login.LoginRequest;
+import com.tabariyya.authentication.dto.login.LoginResponse;
+import com.tabariyya.authentication.dto.register.RegisterResponse;
+import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.utils.jwt.JwtConsumer;
+import com.tabariyya.utils.jwt.JwtProducer;
+import com.tabariyya.utils.jwt.TokenType;
+import com.tabariyya.utils.mail.MailUtils;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,10 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
@@ -84,7 +81,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
         String resetLink = authorizationBaseUrl + "?token=" + authenticationToken;
         String body = template.replace("${token}", resetLink);
 
-        mailUtils.sendEmail(List.of(email), new ArrayList<>(), new ArrayList<>(), "Mail Authentication", body);
+        mailUtils.sendEmail(Collections.singletonList(email), new ArrayList<String>(), new ArrayList<String>(), "Mail Authentication", body);
         return ResponseEntity.ok().build();
     }
 
@@ -102,7 +99,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
             String resetLink = resetBaseUrl + "?token=" + emailVerificationToken;
             String body = template.replace("${token}", resetLink);
 
-            mailUtils.sendEmail(List.of(user.getEmail()), new ArrayList<>(), new ArrayList<>(), "Verification", body);
+            mailUtils.sendEmail(Collections.singletonList(user.getEmail()), new ArrayList<String>(), new ArrayList<String>(), "Verification", body);
 
         } else {
             // this simulates us sending the mail in execution time

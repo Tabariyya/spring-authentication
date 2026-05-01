@@ -1,7 +1,6 @@
 package com.tabariyya.authentication.services;
 
-
-import com.waleed.springutils.auth.models.BaseUser;
+import com.tabariyya.authentication.models.BaseUser;
 
 import java.util.Optional;
 
