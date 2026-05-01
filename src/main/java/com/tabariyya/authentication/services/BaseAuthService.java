@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.mail.MessagingException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +50,7 @@ public abstract class BaseAuthService<T extends BaseUser> {
 
     public abstract ResponseEntity<LoginResponse> login(LoginRequest request);
 
-    public abstract ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws MessagingException, InterruptedException;
+    public abstract ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException;
 
     public abstract ResponseEntity<?> resetPassword(String newPassword, int userId);
 
