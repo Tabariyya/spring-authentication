@@ -43,7 +43,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
+        return ResponseEntity.status(201).body(
                 new RegisterResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
 

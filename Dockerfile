@@ -1,6 +1,3 @@
-# syntax=docker/dockerfile:1
-
-# ── Build stage ──────────────────────────────────────────────────────────────
 FROM maven:3.8.6-openjdk-8 AS build
 
 WORKDIR /app

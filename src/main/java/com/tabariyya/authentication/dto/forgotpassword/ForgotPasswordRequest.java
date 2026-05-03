@@ -1,6 +1,6 @@
 package com.tabariyya.authentication.dto.forgotpassword;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 public class ForgotPasswordRequest {
 
