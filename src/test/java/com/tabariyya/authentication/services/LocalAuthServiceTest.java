@@ -64,7 +64,8 @@ class LocalAuthServiceTest {
     @Mock PasswordEncoder              passwordEncoder;
     @Mock JwtConsumer                  jwtConsumer;
     @Mock JwtProducer                  jwtProducer;
-    @Mock EmailTotpService             emailTotpService;
+    @Mock
+    OtpService otpService;
     @Mock OtpSender                    emailSender;
     @Mock OtpSender                    smsSender;
 
@@ -77,7 +78,7 @@ class LocalAuthServiceTest {
         service = new LocalAuthService<>(
                 userRepository, passwordEncoder, jwtConsumer, jwtProducer,
                 "PT15M", "P7D",
-                emailTotpService, Arrays.asList(emailSender, smsSender)
+                otpService, Arrays.asList(emailSender, smsSender)
         );
     }
 
@@ -86,7 +87,7 @@ class LocalAuthServiceTest {
     @Test
     void register_validOtp_returns201WithTokens() {
         TestUser user = new TestUser(0, "Alice", "raw", "alice@example.com");
-        when(emailTotpService.verifyCode("alice@example.com", "123456")).thenReturn(true);
+        when(otpService.verifyCode("alice@example.com", "123456")).thenReturn(true);
         when(passwordEncoder.encode("raw")).thenReturn("hashed");
         when(jwtProducer.generateToken(any(Map.class), any(Duration.class), any(TokenType.class))).thenReturn("tok");
 
@@ -100,7 +101,7 @@ class LocalAuthServiceTest {
     @Test
     void register_invalidOtp_returns401() {
         TestUser user = new TestUser(0, "Alice", "raw", "alice@example.com");
-        when(emailTotpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
+        when(otpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
 
         ResponseEntity<?> response = service.register(user, "000000");
 
@@ -111,7 +112,7 @@ class LocalAuthServiceTest {
     @Test
     void register_normalisesEmailAndUsername() {
         TestUser user = new TestUser(0, "Alice", "raw", "Alice@Example.COM");
-        when(emailTotpService.verifyCode("alice@example.com", "111111")).thenReturn(true);
+        when(otpService.verifyCode("alice@example.com", "111111")).thenReturn(true);
         when(passwordEncoder.encode(any())).thenReturn("hashed");
         when(jwtProducer.generateToken(any(Map.class), any(Duration.class), any(TokenType.class))).thenReturn("tok");
 
@@ -159,7 +160,7 @@ class LocalAuthServiceTest {
 
     @Test
     void sendOtp_emailChannel_generatesAndSends() {
-        when(emailTotpService.generateCode("alice@example.com")).thenReturn("482931");
+        when(otpService.generateCode("alice@example.com")).thenReturn("482931");
 
         ResponseEntity<Void> response = service.sendOtp("alice@example.com", "email");
 
@@ -170,7 +171,7 @@ class LocalAuthServiceTest {
 
     @Test
     void sendOtp_smsChannel_routesToSmsSender() {
-        when(emailTotpService.generateCode("+9725xxxxxxx")).thenReturn("111222");
+        when(otpService.generateCode("+9725xxxxxxx")).thenReturn("111222");
 
         service.sendOtp("+9725xxxxxxx", "sms");
 
@@ -183,7 +184,7 @@ class LocalAuthServiceTest {
         ResponseEntity<Void> response = service.sendOtp("alice@example.com", "pigeon");
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(emailTotpService, never()).generateCode(any());
+        verify(otpService, never()).generateCode(any());
     }
 
     // ── forgotPassword ────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ class LocalAuthServiceTest {
     void forgotPassword_existingUser_sendsOtpViaRequestedChannel() throws InterruptedException {
         TestUser user = new TestUser(1, "alice", "hashed", "alice@example.com");
         when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
-        when(emailTotpService.generateCode("alice@example.com")).thenReturn("382910");
+        when(otpService.generateCode("alice@example.com")).thenReturn("382910");
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice", "email"));
 
@@ -208,7 +209,7 @@ class LocalAuthServiceTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(emailSender, never()).send(any(), any());
-        verify(emailTotpService, never()).generateCode(any());
+        verify(otpService, never()).generateCode(any());
     }
 
     @Test
@@ -225,7 +226,7 @@ class LocalAuthServiceTest {
     void resetPassword_validOtp_updatesPasswordAndReturns200() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com");
         when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
-        when(emailTotpService.verifyCode("alice@example.com", "382910")).thenReturn(true);
+        when(otpService.verifyCode("alice@example.com", "382910")).thenReturn(true);
         when(passwordEncoder.encode("New$ecret1")).thenReturn("new-hash");
 
         ResponseEntity<?> response = service.resetPassword(
@@ -240,7 +241,7 @@ class LocalAuthServiceTest {
     void resetPassword_invalidOtp_returns401() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com");
         when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
-        when(emailTotpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
+        when(otpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
 
         ResponseEntity<?> response = service.resetPassword(
                 new ResetPasswordRequest("alice", "000000", "New$ecret1"));
@@ -257,6 +258,6 @@ class LocalAuthServiceTest {
                 new ResetPasswordRequest("ghost", "382910", "New$ecret1"));
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        verify(emailTotpService, never()).verifyCode(any(), any());
+        verify(otpService, never()).verifyCode(any(), any());
     }
 }

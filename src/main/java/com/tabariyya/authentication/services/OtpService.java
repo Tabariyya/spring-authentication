@@ -8,19 +8,19 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.function.LongSupplier;
 
-public class EmailTotpService {
+public class OtpService {
 
     private final byte[] masterKey;
     private final int timeStep;
     private final int digits;
     private final LongSupplier clock;
 
-    public EmailTotpService(String masterKey, int timeStep, int digits) {
+    public OtpService(String masterKey, int timeStep, int digits) {
         this(masterKey, timeStep, digits, System::currentTimeMillis);
     }
 
     // Package-private — used by tests to inject a fixed clock.
-    EmailTotpService(String masterKey, int timeStep, int digits, LongSupplier clock) {
+    OtpService(String masterKey, int timeStep, int digits, LongSupplier clock) {
         this.masterKey = masterKey.getBytes(StandardCharsets.UTF_8);
         this.timeStep = timeStep;
         this.digits = digits;

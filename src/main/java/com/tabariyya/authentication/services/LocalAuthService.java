@@ -20,12 +20,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
 
-    private final EmailTotpService emailTotpService;
+    private final OtpService otpService;
     private final Map<String, OtpSender> senders;
 
-    public LocalAuthService(BaseUserRepository<T> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, EmailTotpService emailTotpService, List<OtpSender> otpSenders) {
+    public LocalAuthService(BaseUserRepository<T> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, OtpService otpService, List<OtpSender> otpSenders) {
         super(userRepository, passwordEncoder, jwtConsumer, jwtProducer, accessTokenExpiry, refreshTokenExpiry);
-        this.emailTotpService = emailTotpService;
+        this.otpService = otpService;
         this.senders = new HashMap<>();
         for (OtpSender sender : otpSenders) {
             this.senders.put(sender.channel(), sender);
@@ -34,7 +34,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
 
     @Override
     public ResponseEntity<RegisterResponse> register(T user, String otp) {
-        if (!emailTotpService.verifyCode(user.getEmail().toLowerCase(), otp)) {
+        if (!otpService.verifyCode(user.getEmail().toLowerCase(), otp)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -68,7 +68,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        String code = emailTotpService.generateCode(recipient.toLowerCase());
+        String code = otpService.generateCode(recipient.toLowerCase());
         sender.send(recipient, code);
         return ResponseEntity.ok().build();
     }
@@ -83,7 +83,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
         T user = userRepository.findByUserName(request.userName().toLowerCase()).orElse(null);
 
         if (user != null) {
-            String code = emailTotpService.generateCode(user.getEmail());
+            String code = otpService.generateCode(user.getEmail());
             sender.send(user.getEmail(), code);
         } else {
             // simulates send time so the caller cannot determine if the user exists
@@ -99,7 +99,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!emailTotpService.verifyCode(user.getEmail(), request.otp())) {
+        if (!otpService.verifyCode(user.getEmail(), request.otp())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
