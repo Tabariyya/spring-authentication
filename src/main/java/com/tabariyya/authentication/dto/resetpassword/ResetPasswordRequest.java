@@ -6,6 +6,12 @@ import javax.validation.constraints.Size;
 
 public class ResetPasswordRequest {
 
+    @NotBlank
+    private final String userName;
+
+    @NotBlank
+    private final String otp;
+
     @NotBlank(message = "Password cannot be blank")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(
@@ -14,8 +20,18 @@ public class ResetPasswordRequest {
     )
     private final String newPassword;
 
-    public ResetPasswordRequest(String newPassword) {
+    public ResetPasswordRequest(String userName, String otp, String newPassword) {
+        this.userName = userName;
+        this.otp = otp;
         this.newPassword = newPassword;
+    }
+
+    public String userName() {
+        return userName;
+    }
+
+    public String otp() {
+        return otp;
     }
 
     public String newPassword() {

@@ -1,6 +1,7 @@
 package com.tabariyya.authentication.services;
 
 import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
+import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.dto.login.LoginRequest;
 import com.tabariyya.authentication.dto.login.LoginResponse;
 import com.tabariyya.authentication.dto.register.RegisterResponse;
@@ -49,12 +50,12 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
     }
 
     @Override
-    public ResponseEntity<RegisterResponse> register(T user) {
+    public ResponseEntity<RegisterResponse> register(T user, String otp) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
     @Override
-    public ResponseEntity<Void> emailAuthentication(String email) {
+    public ResponseEntity<Void> sendOtp(String recipient, String channel) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
@@ -65,7 +66,7 @@ public class LdapAuthService<T extends BaseUser> extends BaseAuthService<T> {
     }
 
     @Override
-    public ResponseEntity<?> resetPassword(String newPassword, int userId) {
+    public ResponseEntity<?> resetPassword(ResetPasswordRequest request) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 

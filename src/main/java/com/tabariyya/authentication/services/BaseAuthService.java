@@ -6,6 +6,7 @@ import com.tabariyya.authentication.dto.login.LoginResponse;
 import com.tabariyya.authentication.dto.register.RegisterResponse;
 import com.tabariyya.authentication.dto.renewal.RenewRequest;
 import com.tabariyya.authentication.dto.renewal.RenewResponse;
+import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
 import com.tabariyya.utils.jwt.JwtConsumer;
 import com.tabariyya.utils.jwt.JwtProducer;
@@ -46,15 +47,15 @@ public abstract class BaseAuthService<T extends BaseUser> {
         this.refreshTokenExpiry = Duration.parse(refreshTokenExpiry);
     }
 
-    public abstract ResponseEntity<RegisterResponse> register(T user);
+    public abstract ResponseEntity<RegisterResponse> register(T user, String otp);
 
     public abstract ResponseEntity<LoginResponse> login(LoginRequest request);
 
     public abstract ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException;
 
-    public abstract ResponseEntity<?> resetPassword(String newPassword, int userId);
+    public abstract ResponseEntity<?> resetPassword(ResetPasswordRequest request);
 
-    public abstract ResponseEntity<Void> emailAuthentication(String email);
+    public abstract ResponseEntity<Void> sendOtp(String recipient, String channel);
 
     public ResponseEntity<RenewResponse> renew(RenewRequest request) {
         boolean isRefreshTokenValid = jwtConsumer.verifyToken(request.refreshToken(), TokenType.REFRESH);
