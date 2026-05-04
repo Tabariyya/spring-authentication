@@ -75,7 +75,7 @@ public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
 
     @Override
     public ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException {
-        OtpSender sender = senders.get(request.channel());
+        OtpSender sender = senders.get("email");
         if (sender == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

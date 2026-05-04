@@ -195,7 +195,7 @@ class LocalAuthServiceTest {
         when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
         when(otpService.generateCode("alice@example.com")).thenReturn("382910");
 
-        ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice", "email"));
+        ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(emailSender).send("alice@example.com", "382910");
@@ -205,22 +205,13 @@ class LocalAuthServiceTest {
     void forgotPassword_unknownUser_returns200WithoutSendingOtp() throws InterruptedException {
         when(userRepository.findByUserName("ghost")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("ghost", "email"));
+        ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("ghost"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(emailSender, never()).send(any(), any());
         verify(otpService, never()).generateCode(any());
     }
 
-    @Test
-    void forgotPassword_unknownChannel_returns400() throws InterruptedException {
-        ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice", "fax"));
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(userRepository, never()).findByUserName(any());
-    }
-
-    // ── resetPassword ─────────────────────────────────────────────────────────
 
     @Test
     void resetPassword_validOtp_updatesPasswordAndReturns200() {
