@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 
 public interface BaseUser {
 
-    // int id
-    int getId();
-    void setId(int id);
+    Object getId();
+    void setId(Object id);
 
     // String userName
     String getUserName();

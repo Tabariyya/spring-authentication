@@ -46,8 +46,8 @@ class LocalAuthServiceTest {
             this.email = email;
         }
 
-        public int getId()                          { return id; }
-        public void setId(int id)                   { this.id = id; }
+        public Object getId()                       { return id; }
+        public void setId(Object id)               { this.id = (Integer) id; }
         public String getUserName()                 { return userName; }
         public void setUserName(String u)           { this.userName = u; }
         public String getPassword()                 { return password; }

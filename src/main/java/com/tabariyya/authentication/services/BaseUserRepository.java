@@ -8,6 +8,6 @@ public interface BaseUserRepository<T extends BaseUser> {
 
     T save(T user);
     Optional<T> findByUserName(String userName);
-    Optional<T> findById(int id);
+    Optional<T> findById(Object id);
 
 }
