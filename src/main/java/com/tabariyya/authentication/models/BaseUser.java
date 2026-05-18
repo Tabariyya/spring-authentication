@@ -1,12 +1,10 @@
 package com.tabariyya.authentication.models;
 
-import java.time.LocalDateTime;
 
-public interface BaseUser {
+public interface BaseUser<ID> {
 
-    // int id
-    int getId();
-    void setId(int id);
+    ID getId();
+    void setId(ID id);
 
     // String userName
     String getUserName();
@@ -19,9 +17,5 @@ public interface BaseUser {
     // String email
     String getEmail();
     void setEmail(String email);
-
-    // LocalDateTime createdAt
-    LocalDateTime getCreatedAt();
-    void setCreatedAt(LocalDateTime createdAt);
 
 }

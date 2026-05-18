@@ -32,22 +32,22 @@ class LocalAuthServiceTest {
 
     // ── minimal BaseUser implementation for tests ────────────────────────────
 
-    static class TestUser implements BaseUser {
-        private int id;
+    static class TestUser implements BaseUser<Integer> {
+        private Integer id;
         private String userName;
         private String password;
         private String email;
         private LocalDateTime createdAt;
 
-        TestUser(int id, String userName, String password, String email) {
+        TestUser(Integer id, String userName, String password, String email) {
             this.id = id;
             this.userName = userName;
             this.password = password;
             this.email = email;
         }
 
-        public int getId()                          { return id; }
-        public void setId(int id)                   { this.id = id; }
+        public Integer getId()                      { return id; }
+        public void setId(Integer id)               { this.id = id; }
         public String getUserName()                 { return userName; }
         public void setUserName(String u)           { this.userName = u; }
         public String getPassword()                 { return password; }
@@ -60,7 +60,7 @@ class LocalAuthServiceTest {
 
     // ── mocks ────────────────────────────────────────────────────────────────
 
-    @Mock BaseUserRepository<TestUser> userRepository;
+    @Mock BaseUserRepository<TestUser, Integer> userRepository;
     @Mock PasswordEncoder              passwordEncoder;
     @Mock JwtConsumer                  jwtConsumer;
     @Mock JwtProducer                  jwtProducer;
@@ -69,7 +69,7 @@ class LocalAuthServiceTest {
     @Mock OtpSender                    emailSender;
     @Mock OtpSender                    smsSender;
 
-    LocalAuthService<TestUser> service;
+    LocalAuthService<TestUser, Integer> service;
 
     @BeforeEach
     void setUp() {
@@ -78,7 +78,8 @@ class LocalAuthServiceTest {
         service = new LocalAuthService<>(
                 userRepository, passwordEncoder, jwtConsumer, jwtProducer,
                 "PT15M", "P7D",
-                otpService, Arrays.asList(emailSender, smsSender)
+                otpService, Arrays.asList(emailSender, smsSender),
+                Integer::parseInt
         );
     }
 

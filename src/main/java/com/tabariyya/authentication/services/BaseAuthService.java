@@ -21,30 +21,34 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-public abstract class BaseAuthService<T extends BaseUser> {
+public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
 
-    protected final BaseUserRepository<T> userRepository;
+    protected final BaseUserRepository<T, ID> userRepository;
     protected final PasswordEncoder passwordEncoder;
     protected final JwtConsumer jwtConsumer;
     protected final JwtProducer jwtProducer;
+    protected final Function<String, ID> idParser;
 
     protected final Duration refreshTokenExpiry;
     protected final Duration accessTokenExpiry;
 
-    protected BaseAuthService(BaseUserRepository<T> userRepository,
+    protected BaseAuthService(BaseUserRepository<T, ID> userRepository,
                               PasswordEncoder passwordEncoder,
                               JwtConsumer jwtConsumer,
                               JwtProducer jwtProducer,
                               String accessTokenExpiry,
-                              String refreshTokenExpiry) {
+                              String refreshTokenExpiry,
+                              Function<String, ID> idParser) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtConsumer = jwtConsumer;
         this.jwtProducer = jwtProducer;
         this.accessTokenExpiry = Duration.parse(accessTokenExpiry);
         this.refreshTokenExpiry = Duration.parse(refreshTokenExpiry);
+        this.idParser = idParser;
     }
 
     public abstract ResponseEntity<RegisterResponse> register(T user, String otp);
@@ -63,7 +67,8 @@ public abstract class BaseAuthService<T extends BaseUser> {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        int userId = jwtConsumer.extractClaims(request.refreshToken()).payload().get(Claims.SUBJECT).getAsInt();
+        String rawId = jwtConsumer.extractClaims(request.refreshToken()).payload().get(Claims.SUBJECT).getAsString();
+        ID userId = idParser.apply(rawId);
 
         T user = userRepository.findById(userId).orElseThrow(
                 (Supplier<ResponseStatusException>) () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED)
@@ -96,7 +101,7 @@ public abstract class BaseAuthService<T extends BaseUser> {
         );
     }
 
-    public Optional<T> getUser(int id) {
+    public Optional<T> getUser(ID id) {
         return userRepository.findById(id);
     }
 

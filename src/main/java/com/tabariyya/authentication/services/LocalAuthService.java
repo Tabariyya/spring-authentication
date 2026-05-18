@@ -17,14 +17,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
-public class LocalAuthService<T extends BaseUser> extends BaseAuthService<T> {
+public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthService<T, ID> {
 
     private final OtpService otpService;
     private final Map<String, OtpSender> senders;
 
-    public LocalAuthService(BaseUserRepository<T> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, OtpService otpService, List<OtpSender> otpSenders) {
-        super(userRepository, passwordEncoder, jwtConsumer, jwtProducer, accessTokenExpiry, refreshTokenExpiry);
+    public LocalAuthService(BaseUserRepository<T, ID> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, OtpService otpService, List<OtpSender> otpSenders, Function<String, ID> idParser) {
+        super(userRepository, passwordEncoder, jwtConsumer, jwtProducer, accessTokenExpiry, refreshTokenExpiry, idParser);
         this.otpService = otpService;
         this.senders = new HashMap<>();
         for (OtpSender sender : otpSenders) {
