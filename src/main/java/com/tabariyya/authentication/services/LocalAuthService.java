@@ -35,17 +35,16 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<RegisterResponse> register(T user, String otp) {
-        if (!otpService.verifyCode(user.getEmail().toLowerCase(), otp)) {
+        if (!otpService.verifyCode(user.getContactInfo().toLowerCase(), otp)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         user.setUserName(user.getUserName().toLowerCase());
-        user.setEmail(user.getEmail().toLowerCase());
+        user.setContactInfo(user.getContactInfo().toLowerCase());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.status(201).body(
-                new RegisterResponse(generateRefreshToken(user), generateAccessToken(user)));
+        return ResponseEntity.status(201).body(new RegisterResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
 
     @Override
@@ -76,16 +75,16 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException {
-        OtpSender sender = senders.get("email");
-        if (sender == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
         T user = userRepository.findByUserName(request.userName().toLowerCase()).orElse(null);
 
         if (user != null) {
-            String code = otpService.generateCode(user.getEmail());
-            sender.send(user.getEmail(), code);
+            OtpSender sender = senders.get(user.getContactInfoType());
+            if (sender == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            String recipient = user.getContactInfo();
+            String code = otpService.generateCode(recipient);
+            sender.send(recipient, code);
         } else {
             // simulates send time so the caller cannot determine if the user exists
             Thread.sleep(ThreadLocalRandom.current().nextLong(1406, 1852));
@@ -100,7 +99,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!otpService.verifyCode(user.getEmail(), request.otp())) {
+        if (!otpService.verifyCode(user.getContactInfo(), request.otp())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 

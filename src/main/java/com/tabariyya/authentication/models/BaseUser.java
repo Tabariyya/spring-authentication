@@ -14,8 +14,11 @@ public interface BaseUser<ID> {
     String getPassword();
     void setPassword(String password);
 
-    // String email
-    String getEmail();
-    void setEmail(String email);
+    String getContactInfo();
+    void setContactInfo(String contactInfo);
+
+    String getContactInfoType();
+    void setContactInfoType(String contactInfoType);
+
 
 }
