@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ResetPasswordRequest(
-        @NotBlank String userName,
+        @NotBlank String identifier,
         @NotBlank String otp,
         @NotBlank(message = "Password cannot be blank")
         @Size(min = 8, message = "Password must be at least 8 characters long")

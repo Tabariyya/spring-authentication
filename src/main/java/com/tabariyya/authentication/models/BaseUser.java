@@ -6,7 +6,7 @@ public interface BaseUser<ID> {
     ID getId();
     void setId(ID id);
 
-    // String userName
+    // String identifier
     String getUserName();
     void setUserName(String userName);
 

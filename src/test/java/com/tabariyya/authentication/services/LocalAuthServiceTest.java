@@ -4,7 +4,7 @@ import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
 import com.tabariyya.authentication.otp.OtpSender;
-import com.tabariyya.authentication.dto.login.LoginRequest;
+import com.tabariyya.authentication.dto.LoginRequest;
 import com.tabariyya.utils.jwt.JwtConsumer;
 import com.tabariyya.utils.jwt.JwtProducer;
 import com.tabariyya.utils.jwt.TokenType;

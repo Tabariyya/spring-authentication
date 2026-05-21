@@ -1,9 +1,8 @@
 package com.tabariyya.authentication.services;
 
 import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
-import com.tabariyya.authentication.dto.login.LoginRequest;
-import com.tabariyya.authentication.dto.login.LoginResponse;
-import com.tabariyya.authentication.dto.register.RegisterResponse;
+import com.tabariyya.authentication.dto.LoginRequest;
+import com.tabariyya.authentication.dto.TokenResponse;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
 import com.tabariyya.authentication.otp.OtpSender;
@@ -34,7 +33,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
     }
 
     @Override
-    public ResponseEntity<RegisterResponse> register(T user, String otp) {
+    public ResponseEntity<TokenResponse> register(T user, String otp) {
         if (!otpService.verifyCode(user.getContactInfo().toLowerCase(), otp)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -44,12 +43,12 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.status(201).body(new RegisterResponse(generateRefreshToken(user), generateAccessToken(user)));
+        return ResponseEntity.status(201).body(new TokenResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
 
     @Override
-    public ResponseEntity<LoginResponse> login(LoginRequest request) {
-        T user = userRepository.findByUserName(request.userName().toLowerCase()).orElse(null);
+    public ResponseEntity<TokenResponse> login(LoginRequest request) {
+        T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -58,7 +57,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.ok(new LoginResponse(generateRefreshToken(user), generateAccessToken(user)));
+        return ResponseEntity.ok(new TokenResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
 
     @Override
@@ -75,7 +74,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException {
-        T user = userRepository.findByUserName(request.userName().toLowerCase()).orElse(null);
+        T user = userRepository.findByUserName(request.identifier().toLowerCase()).orElse(null);
 
         if (user != null) {
             OtpSender sender = senders.get(user.getContactInfoType());
@@ -94,7 +93,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<?> resetPassword(ResetPasswordRequest request) {
-        T user = userRepository.findByUserName(request.userName().toLowerCase()).orElse(null);
+        T user = userRepository.findByUserName(request.identifier().toLowerCase()).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
