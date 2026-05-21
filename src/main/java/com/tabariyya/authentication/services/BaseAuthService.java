@@ -1,9 +1,8 @@
 package com.tabariyya.authentication.services;
 
 import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
-import com.tabariyya.authentication.dto.login.LoginRequest;
-import com.tabariyya.authentication.dto.login.LoginResponse;
-import com.tabariyya.authentication.dto.register.RegisterResponse;
+import com.tabariyya.authentication.dto.LoginRequest;
+import com.tabariyya.authentication.dto.TokenResponse;
 import com.tabariyya.authentication.dto.renewal.RenewRequest;
 import com.tabariyya.authentication.dto.renewal.RenewResponse;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
@@ -51,9 +50,9 @@ public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
         this.idParser = idParser;
     }
 
-    public abstract ResponseEntity<RegisterResponse> register(T user, String otp);
+    public abstract ResponseEntity<TokenResponse> register(T user, String otp);
 
-    public abstract ResponseEntity<LoginResponse> login(LoginRequest request);
+    public abstract ResponseEntity<TokenResponse> login(LoginRequest request);
 
     public abstract ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException;
 

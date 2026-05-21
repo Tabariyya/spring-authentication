@@ -1,8 +1,8 @@
-package com.tabariyya.authentication.dto.login;
+package com.tabariyya.authentication.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-        @NotBlank String userName,
+        @NotBlank String identifier,
         @NotBlank String password
 ) {}
