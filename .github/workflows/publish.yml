@@ -12,6 +12,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Checkout code (with LFS)
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+          fetch-depth: 2
+
       - name: Check if version changed
         id: version-check
         run: |
