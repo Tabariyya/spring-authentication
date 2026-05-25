@@ -197,7 +197,7 @@ class LocalAuthServiceTest {
     @Test
     void forgotPassword_existingUser_sendsOtpViaRequestedChannel() throws InterruptedException {
         TestUser user = new TestUser(1, "alice", "hashed", "alice@example.com", "email");
-        when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.generateCode("alice@example.com")).thenReturn("382910");
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice"));
@@ -208,7 +208,7 @@ class LocalAuthServiceTest {
 
     @Test
     void forgotPassword_unknownUser_returns200WithoutSendingOtp() throws InterruptedException {
-        when(userRepository.findByUserName("ghost")).thenReturn(Optional.empty());
+        when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("ghost"));
 
@@ -221,7 +221,7 @@ class LocalAuthServiceTest {
     @Test
     void resetPassword_validOtp_updatesPasswordAndReturns200() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com", "email");
-        when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.verifyCode("alice@example.com", "382910")).thenReturn(true);
         when(passwordEncoder.encode("New$ecret1")).thenReturn("new-hash");
 
@@ -236,7 +236,7 @@ class LocalAuthServiceTest {
     @Test
     void resetPassword_invalidOtp_returns401() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com", "email");
-        when(userRepository.findByUserName("alice")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
 
         ResponseEntity<?> response = service.resetPassword(
@@ -248,7 +248,7 @@ class LocalAuthServiceTest {
 
     @Test
     void resetPassword_unknownUser_returns401() {
-        when(userRepository.findByUserName("ghost")).thenReturn(Optional.empty());
+        when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = service.resetPassword(
                 new ResetPasswordRequest("ghost", "382910", "New$ecret1"));

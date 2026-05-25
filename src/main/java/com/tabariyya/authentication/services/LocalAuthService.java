@@ -74,7 +74,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) throws InterruptedException {
-        T user = userRepository.findByUserName(request.identifier().toLowerCase()).orElse(null);
+        T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
 
         if (user != null) {
             OtpSender sender = senders.get(user.getContactInfoType());
@@ -93,7 +93,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<?> resetPassword(ResetPasswordRequest request) {
-        T user = userRepository.findByUserName(request.identifier().toLowerCase()).orElse(null);
+        T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
