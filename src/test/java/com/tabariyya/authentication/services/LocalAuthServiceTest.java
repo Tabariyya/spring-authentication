@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -94,23 +95,25 @@ class LocalAuthServiceTest {
         TestUser user = new TestUser(0, "Alice", "raw", "alice@example.com", "email");
         when(otpService.verifyCode("alice@example.com", "123456")).thenReturn(true);
         when(passwordEncoder.encode("raw")).thenReturn("hashed");
+        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(jwtProducer.generateToken(any(Map.class), any(Duration.class), any(TokenType.class))).thenReturn("tok");
 
         ResponseEntity<?> response = service.register(user, "123456");
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        verify(userRepository).save(user);
+        verify(userRepository).save(any());
         assertEquals("hashed", user.getPassword());
     }
 
     @Test
-    void register_invalidOtp_returns401() {
+    void register_invalidOtp_throws401() {
         TestUser user = new TestUser(0, "Alice", "raw", "alice@example.com", "email");
         when(otpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
 
-        ResponseEntity<?> response = service.register(user, "000000");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.register(user, "000000"));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         verify(userRepository, never()).save(any());
     }
 
@@ -119,6 +122,7 @@ class LocalAuthServiceTest {
         TestUser user = new TestUser(0, "Alice", "raw", "Alice@Example.COM", "email");
         when(otpService.verifyCode("alice@example.com", "111111")).thenReturn(true);
         when(passwordEncoder.encode(any())).thenReturn("hashed");
+        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(jwtProducer.generateToken(any(Map.class), any(Duration.class), any(TokenType.class))).thenReturn("tok");
 
         service.register(user, "111111");
@@ -142,23 +146,25 @@ class LocalAuthServiceTest {
     }
 
     @Test
-    void login_wrongPassword_returns401() {
+    void login_wrongPassword_throws401() {
         TestUser user = new TestUser(1, "alice", "hashed", "alice@example.com", "email");
         when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
-        ResponseEntity<?> response = service.login(new LoginRequest("alice", "wrong"));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.login(new LoginRequest("alice", "wrong")));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
     }
 
     @Test
-    void login_unknownUser_returns401() {
+    void login_unknownUser_throws401() {
         when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = service.login(new LoginRequest("ghost", "any"));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.login(new LoginRequest("ghost", "any")));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
     }
 
     // ── sendOtp ───────────────────────────────────────────────────────────────
@@ -169,7 +175,7 @@ class LocalAuthServiceTest {
 
         ResponseEntity<Void> response = service.sendOtp("alice@example.com", "email");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(emailSender).send("alice@example.com", "482931");
         verify(smsSender, never()).send(any(), any());
     }
@@ -185,10 +191,11 @@ class LocalAuthServiceTest {
     }
 
     @Test
-    void sendOtp_unknownChannel_returns400() {
-        ResponseEntity<Void> response = service.sendOtp("alice@example.com", "pigeon");
+    void sendOtp_unknownChannel_throws400() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.sendOtp("alice@example.com", "pigeon"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(otpService, never()).generateCode(any());
     }
 
@@ -202,24 +209,24 @@ class LocalAuthServiceTest {
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice"));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(emailSender).send("alice@example.com", "382910");
     }
 
     @Test
-    void forgotPassword_unknownUser_returns200WithoutSendingOtp() throws InterruptedException {
+    void forgotPassword_unknownUser_returns204WithoutSendingOtp() throws InterruptedException {
         when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("ghost"));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(emailSender, never()).send(any(), any());
         verify(otpService, never()).generateCode(any());
     }
 
 
     @Test
-    void resetPassword_validOtp_updatesPasswordAndReturns200() {
+    void resetPassword_validOtp_updatesPasswordAndReturns204() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com", "email");
         when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.verifyCode("alice@example.com", "382910")).thenReturn(true);
@@ -228,32 +235,32 @@ class LocalAuthServiceTest {
         ResponseEntity<?> response = service.resetPassword(
                 new ResetPasswordRequest("alice", "382910", "New$ecret1"));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         assertEquals("new-hash", user.getPassword());
         verify(userRepository).save(user);
     }
 
     @Test
-    void resetPassword_invalidOtp_returns401() {
+    void resetPassword_invalidOtp_throws401() {
         TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com", "email");
         when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.verifyCode("alice@example.com", "000000")).thenReturn(false);
 
-        ResponseEntity<?> response = service.resetPassword(
-                new ResetPasswordRequest("alice", "000000", "New$ecret1"));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.resetPassword(new ResetPasswordRequest("alice", "000000", "New$ecret1")));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         verify(userRepository, never()).save(any());
     }
 
     @Test
-    void resetPassword_unknownUser_returns401() {
+    void resetPassword_unknownUser_throws401() {
         when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = service.resetPassword(
-                new ResetPasswordRequest("ghost", "382910", "New$ecret1"));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.resetPassword(new ResetPasswordRequest("ghost", "382910", "New$ecret1")));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         verify(otpService, never()).verifyCode(any(), any());
     }
 }

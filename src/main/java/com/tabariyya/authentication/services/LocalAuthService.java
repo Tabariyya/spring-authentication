@@ -11,6 +11,7 @@ import com.tabariyya.utils.jwt.JwtProducer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,28 +35,24 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<TokenResponse> register(T user, String otp) {
-        if (!otpService.verifyCode(user.getContactInfo().toLowerCase(), otp)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (!otpService.verifyCode(user.getContactInfo().toLowerCase(), otp))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         user.setUserName(user.getUserName().toLowerCase());
         user.setContactInfo(user.getContactInfo().toLowerCase());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        user = userRepository.save(user);
 
-        return ResponseEntity.status(201).body(new TokenResponse(generateRefreshToken(user), generateAccessToken(user)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new TokenResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
 
     @Override
     public ResponseEntity<TokenResponse> login(LoginRequest request) {
         T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (!passwordEncoder.matches(request.password(), user.getPassword()))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         return ResponseEntity.ok(new TokenResponse(generateRefreshToken(user), generateAccessToken(user)));
     }
@@ -63,13 +60,11 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
     @Override
     public ResponseEntity<Void> sendOtp(String recipient, String channel) {
         OtpSender sender = senders.get(channel);
-        if (sender == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         String code = otpService.generateCode(recipient.toLowerCase());
         sender.send(recipient, code);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -78,9 +73,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
         if (user != null) {
             OtpSender sender = senders.get(user.getContactInfoType());
-            if (sender == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
+            if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             String recipient = user.getContactInfo();
             String code = otpService.generateCode(recipient);
             sender.send(recipient, code);
@@ -88,22 +81,19 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
             // simulates send time so the caller cannot determine if the user exists
             Thread.sleep(ThreadLocalRandom.current().nextLong(1406, 1852));
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<?> resetPassword(ResetPasswordRequest request) {
         T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
-        if (!otpService.verifyCode(user.getContactInfo(), request.otp())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (!otpService.verifyCode(user.getContactInfo(), request.otp()))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
