@@ -254,6 +254,20 @@ class LocalAuthServiceTest {
     }
 
     @Test
+    void resetPassword_samePassword_throws400() {
+        TestUser user = new TestUser(1, "alice", "old-hash", "alice@example.com", "email");
+        when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
+        when(otpService.verifyCode("alice@example.com", "382910")).thenReturn(true);
+        when(passwordEncoder.matches("New$ecret1", "old-hash")).thenReturn(true);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.resetPassword(new ResetPasswordRequest("alice", "382910", "New$ecret1")));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void resetPassword_unknownUser_throws401() {
         when(userRepository.findByIdentifier("ghost")).thenReturn(Optional.empty());
 

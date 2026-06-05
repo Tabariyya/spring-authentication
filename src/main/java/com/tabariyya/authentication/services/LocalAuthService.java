@@ -92,6 +92,9 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         if (!otpService.verifyCode(user.getContactInfo(), request.otp()))
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         return ResponseEntity.noContent().build();
