@@ -1,10 +1,11 @@
 package com.tabariyya.authentication.services;
 
-import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
 import com.tabariyya.authentication.dto.LoginRequest;
 import com.tabariyya.authentication.dto.TokenResponse;
+import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.authentication.otp.OtpPurpose;
 import com.tabariyya.authentication.otp.OtpSender;
 import com.tabariyya.utils.jwt.JwtConsumer;
 import com.tabariyya.utils.jwt.JwtProducer;
@@ -35,11 +36,12 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     @Override
     public ResponseEntity<TokenResponse> register(T user, String otp) {
-        if (!otpService.verifyCode(user.getContactInfo().toLowerCase(), otp))
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-
         user.setUserName(user.getUserName().toLowerCase());
         user.setContactInfo(user.getContactInfo().toLowerCase());
+
+        if (!otpService.verifyCode(user.getContactInfo(), OtpPurpose.VERIFY_ACCOUNT, otp))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user = userRepository.save(user);
 
@@ -62,7 +64,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         OtpSender sender = senders.get(channel);
         if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        String code = otpService.generateCode(recipient.toLowerCase());
+        String code = otpService.generateCode(recipient, OtpPurpose.VERIFY_ACCOUNT);
         sender.send(recipient, code);
         return ResponseEntity.noContent().build();
     }
@@ -74,8 +76,9 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         if (user != null) {
             OtpSender sender = senders.get(user.getContactInfoType());
             if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+
             String recipient = user.getContactInfo();
-            String code = otpService.generateCode(recipient);
+            String code = otpService.generateCode(recipient, OtpPurpose.FORGOT_PASSWORD);
             sender.send(recipient, code);
         } else {
             // simulates send time so the caller cannot determine if the user exists
@@ -89,8 +92,11 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         T user = userRepository.findByIdentifier(request.identifier().toLowerCase()).orElse(null);
         if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
-        if (!otpService.verifyCode(user.getContactInfo(), request.otp()))
+        if (!otpService.verifyCode(user.getContactInfo(), OtpPurpose.FORGOT_PASSWORD, request.otp()))
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
