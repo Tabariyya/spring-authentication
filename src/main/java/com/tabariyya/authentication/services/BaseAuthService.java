@@ -7,6 +7,7 @@ import com.tabariyya.authentication.dto.renewal.RenewRequest;
 import com.tabariyya.authentication.dto.renewal.RenewResponse;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.authentication.token.TokenIssuer;
 import com.tabariyya.utils.jwt.JwtConsumer;
 import com.tabariyya.utils.jwt.JwtProducer;
 import com.tabariyya.utils.jwt.TokenType;
@@ -17,8 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -34,6 +33,8 @@ public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
     protected final Duration refreshTokenExpiry;
     protected final Duration accessTokenExpiry;
 
+    protected final TokenIssuer<T, ID> tokenIssuer;
+
     protected BaseAuthService(BaseUserRepository<T, ID> userRepository,
                               PasswordEncoder passwordEncoder,
                               JwtConsumer jwtConsumer,
@@ -48,6 +49,7 @@ public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
         this.accessTokenExpiry = Duration.parse(accessTokenExpiry);
         this.refreshTokenExpiry = Duration.parse(refreshTokenExpiry);
         this.idParser = idParser;
+        this.tokenIssuer = new TokenIssuer<>(jwtProducer, accessTokenExpiry, refreshTokenExpiry);
     }
 
     public abstract ResponseEntity<TokenResponse> register(T user, String otp);
@@ -78,26 +80,11 @@ public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
     }
 
     protected String generateRefreshToken(T user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(Claims.SUBJECT, String.valueOf(user.getId()));
-
-        return jwtProducer.generateToken(
-                claims,
-                refreshTokenExpiry,
-                TokenType.REFRESH
-        );
+        return tokenIssuer.generateRefreshToken(user);
     }
 
     protected String generateAccessToken(T user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(Claims.SUBJECT, String.valueOf(user.getId()));
-        claims.put("username", user.getUserName());
-
-        return jwtProducer.generateToken(
-                claims,
-                accessTokenExpiry,
-                TokenType.ACCESS
-        );
+        return tokenIssuer.generateAccessToken(user);
     }
 
     public Optional<T> getUser(ID id) {
