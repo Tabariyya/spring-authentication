@@ -88,7 +88,7 @@ class TokenIssuerTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void generateAccessToken_carriesSubjectAndUsername_withAccessTypeAndExpiry() {
+    void generateAccessToken_carriesSubjectOnly_withAccessTypeAndExpiry() {
         TestUser user = new TestUser(42, "alperen");
         when(jwtProducer.generateToken(any(Map.class), any(Duration.class), any(TokenType.class)))
                 .thenReturn("access-tok");
@@ -106,7 +106,7 @@ class TokenIssuerTest {
 
         Map<String, Object> claims = claimsCaptor.getValue();
         assertEquals("42", claims.get(Claims.SUBJECT));
-        assertEquals("alperen", claims.get("username"));
+        assertFalse(claims.containsKey("username"));
         assertEquals(Duration.parse("PT15M"), expiryCaptor.getValue());
         assertEquals(TokenType.ACCESS, typeCaptor.getValue());
     }

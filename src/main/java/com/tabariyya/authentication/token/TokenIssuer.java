@@ -29,7 +29,6 @@ public class TokenIssuer<U extends BaseUser<ID>, ID> {
     public String generateAccessToken(U user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(Claims.SUBJECT, String.valueOf(user.getId()));
-        claims.put("username", user.getUserName());
 
         return jwtProducer.generateToken(
                 claims,
