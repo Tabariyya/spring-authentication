@@ -67,21 +67,21 @@ public class AppleTokenVerifier implements SocialTokenVerifier {
         try {
             String sub = claims.getSubject();
             String email = claims.getStringClaim("email");
+            Boolean emailVerified = parseAppleBoolean(claims.getClaim("email_verified"));
 
-            return new SocialUserInfo(sub, email, parseAppleBoolean(claims.getClaim("email_verified")));
+            return new SocialUserInfo(sub, email, Boolean.TRUE.equals(emailVerified));
         } catch (ParseException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Apple token claims could not be read", e);
         }
     }
 
-    private boolean parseAppleBoolean(Object value) {
-        if (value instanceof Boolean flag) {
-            return flag;
+    private Boolean parseAppleBoolean(Object value) {
+        if (value instanceof Boolean b) {
+            return b;
         }
-        if (value instanceof String text) {
-            return Boolean.parseBoolean(text);
+        if (value instanceof String s) {
+            return Boolean.parseBoolean(s);
         }
-
         return false;
     }
 }

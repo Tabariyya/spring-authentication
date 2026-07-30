@@ -1,9 +1,8 @@
 package com.tabariyya.authentication.models;
 
 
-public interface BaseUser<ID> extends TokenSubject<ID> {
+public interface BaseUser<ID> {
 
-    @Override
     ID getId();
     void setId(ID id);
 
