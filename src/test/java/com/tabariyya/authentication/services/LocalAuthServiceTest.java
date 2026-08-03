@@ -88,6 +88,10 @@ class LocalAuthServiceTest {
             this.contactInfoType = t;
         }
 
+        public boolean isDeleted() {
+            return false;
+        }
+
         public LocalDateTime getCreatedAt() {
             return createdAt;
         }
