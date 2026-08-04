@@ -20,5 +20,6 @@ public interface BaseUser<ID> {
     String getContactInfoType();
     void setContactInfoType(String contactInfoType);
 
+    boolean isDeleted();
 
 }

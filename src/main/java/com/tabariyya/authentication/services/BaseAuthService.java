@@ -75,6 +75,10 @@ public abstract class BaseAuthService<T extends BaseUser<ID>, ID> {
                 (Supplier<ResponseStatusException>) () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED)
         );
 
+        if (user.isDeleted()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         String accessToken = generateAccessToken(user);
         return ResponseEntity.ok(new RenewResponse(accessToken));
     }

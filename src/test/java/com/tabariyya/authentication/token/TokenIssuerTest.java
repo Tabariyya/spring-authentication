@@ -74,6 +74,10 @@ class TokenIssuerTest {
         public void setContactInfoType(String contactInfoType) {
             this.contactInfoType = contactInfoType;
         }
+
+        public boolean isDeleted() {
+            return false;
+        }
     }
 
     @Mock
