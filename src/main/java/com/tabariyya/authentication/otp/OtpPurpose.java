@@ -3,5 +3,6 @@ package com.tabariyya.authentication.otp;
 public enum OtpPurpose {
     VERIFY_ACCOUNT,
     FORGOT_PASSWORD,
-    UPDATE_CONTACT_INFO
+    UPDATE_CONTACT_INFO,
+    VERIFY_STUDENT_EMAIL
 }
