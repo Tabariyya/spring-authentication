@@ -5,6 +5,7 @@ import com.tabariyya.authentication.dto.TokenResponse;
 import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.authentication.otp.OtpContentProvider;
 import com.tabariyya.authentication.otp.OtpPurpose;
 import com.tabariyya.authentication.otp.OtpSender;
 import com.tabariyya.utils.jwt.JwtConsumer;
@@ -24,10 +25,12 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
     private final OtpService otpService;
     private final Map<String, OtpSender> senders;
+    private final OtpContentProvider otpContentProvider;
 
-    public LocalAuthService(BaseUserRepository<T, ID> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, OtpService otpService, List<OtpSender> otpSenders, Function<String, ID> idParser) {
+    public LocalAuthService(BaseUserRepository<T, ID> userRepository, PasswordEncoder passwordEncoder, JwtConsumer jwtConsumer, JwtProducer jwtProducer, String accessTokenExpiry, String refreshTokenExpiry, OtpService otpService, List<OtpSender> otpSenders, OtpContentProvider otpContentProvider, Function<String, ID> idParser) {
         super(userRepository, passwordEncoder, jwtConsumer, jwtProducer, accessTokenExpiry, refreshTokenExpiry, idParser);
         this.otpService = otpService;
+        this.otpContentProvider = otpContentProvider;
         this.senders = new HashMap<>();
         for (OtpSender sender : otpSenders) {
             this.senders.put(sender.channel(), sender);
@@ -65,7 +68,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         String code = otpService.generateCode(recipient, OtpPurpose.VERIFY_ACCOUNT);
-        sender.send(recipient, sender.verifyAccountSubject(), sender.verifyAccountContent(code));
+        sender.send(recipient, otpContentProvider.verifyAccountSubject(channel), otpContentProvider.verifyAccountContent(channel, code));
         return ResponseEntity.noContent().build();
     }
 
@@ -79,7 +82,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
             String recipient = user.getContactInfo();
             String code = otpService.generateCode(recipient, OtpPurpose.FORGOT_PASSWORD);
-            sender.send(recipient, sender.forgotPasswordSubject(), sender.forgotPasswordContent(code));
+            sender.send(recipient, otpContentProvider.forgotPasswordSubject(user.getContactInfoType()), otpContentProvider.forgotPasswordContent(user.getContactInfoType(), code));
         } else {
             // simulates send time so the caller cannot determine if the user exists
             Thread.sleep(ThreadLocalRandom.current().nextLong(1406, 1852));

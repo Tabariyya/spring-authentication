@@ -1,6 +1,5 @@
 package com.tabariyya.authentication.otp;
 
-import com.tabariyya.authentication.otp.SmsOtpSender;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -13,9 +12,6 @@ class SmsOtpSenderTest {
     // Concrete test double that captures outgoing SMS calls.
     static class CapturingSmsOtpSender extends SmsOtpSender {
         final List<String[]> calls = new ArrayList<>();
-
-        CapturingSmsOtpSender() { super(); }
-        CapturingSmsOtpSender(String template) { super(template); }
 
         @Override
         protected void sendSms(String phoneNumber, String message) {
@@ -32,35 +28,26 @@ class SmsOtpSenderTest {
     }
 
     @Test
-    void send_defaultTemplate_containsCode() {
+    void send_deliversContentAsMessage() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender();
-        sender.send("+9725xxxxxxx", sender.verifyAccountSubject(), sender.verifyAccountContent("382910"));
+        sender.send("+9725xxxxxxx", null, "Code: 382910");
 
-        assertTrue(sender.lastMessage().contains("382910"));
-        assertFalse(sender.lastMessage().contains("${code}"));
-    }
-
-    @Test
-    void send_customTemplate_replacesPlaceholder() {
-        CapturingSmsOtpSender sender = new CapturingSmsOtpSender("OTP: ${code}");
-        sender.send("+9725xxxxxxx", sender.verifyAccountSubject(), sender.verifyAccountContent("000001"));
-
-        assertEquals("OTP: 000001", sender.lastMessage());
+        assertEquals("Code: 382910", sender.lastMessage());
     }
 
     @Test
     void send_deliversToCorrectNumber() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender();
-        sender.send("+9721111111", sender.verifyAccountSubject(), sender.verifyAccountContent("999999"));
+        sender.send("+9721111111", null, "Code: 999999");
 
         assertEquals("+9721111111", sender.lastPhone());
     }
 
     @Test
     void send_multipleCalls_eachDeliveredIndependently() {
-        CapturingSmsOtpSender sender = new CapturingSmsOtpSender("Code: ${code}");
-        sender.send("+111", sender.verifyAccountSubject(), sender.verifyAccountContent("111111"));
-        sender.send("+222", sender.verifyAccountSubject(), sender.verifyAccountContent("222222"));
+        CapturingSmsOtpSender sender = new CapturingSmsOtpSender();
+        sender.send("+111", null, "Code: 111111");
+        sender.send("+222", null, "Code: 222222");
 
         assertEquals(2, sender.calls.size());
         assertEquals("Code: 111111", sender.calls.get(0)[1]);

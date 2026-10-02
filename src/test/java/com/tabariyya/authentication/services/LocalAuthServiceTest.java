@@ -4,6 +4,7 @@ import com.tabariyya.authentication.dto.LoginRequest;
 import com.tabariyya.authentication.dto.forgotpassword.ForgotPasswordRequest;
 import com.tabariyya.authentication.dto.resetpassword.ResetPasswordRequest;
 import com.tabariyya.authentication.models.BaseUser;
+import com.tabariyya.authentication.otp.OtpContentProvider;
 import com.tabariyya.authentication.otp.OtpPurpose;
 import com.tabariyya.authentication.otp.OtpSender;
 import com.tabariyya.utils.jwt.JwtConsumer;
@@ -122,6 +123,9 @@ class LocalAuthServiceTest {
     @Mock
     OtpSender smsSender;
 
+    @Mock
+    OtpContentProvider contentProvider;
+
     LocalAuthService<TestUser, Integer> service;
 
     @BeforeEach
@@ -138,6 +142,7 @@ class LocalAuthServiceTest {
                 "P7D",
                 otpService,
                 Arrays.asList(emailSender, smsSender),
+                contentProvider,
                 Integer::parseInt
         );
     }
@@ -231,8 +236,8 @@ class LocalAuthServiceTest {
     @Test
     void sendOtp_emailChannel_generatesAndSends() {
         when(otpService.generateCode("alice@example.com", OtpPurpose.VERIFY_ACCOUNT)).thenReturn("482931");
-        when(emailSender.verifyAccountSubject()).thenReturn("Verify");
-        when(emailSender.verifyAccountContent("482931")).thenReturn("Code: 482931");
+        when(contentProvider.verifyAccountSubject("email")).thenReturn("Verify");
+        when(contentProvider.verifyAccountContent("email", "482931")).thenReturn("Code: 482931");
 
         ResponseEntity<Void> response = service.sendOtp("alice@example.com", "email");
 
@@ -244,7 +249,7 @@ class LocalAuthServiceTest {
     @Test
     void sendOtp_smsChannel_routesToSmsSender() {
         when(otpService.generateCode("+9725xxxxxxx", OtpPurpose.VERIFY_ACCOUNT)).thenReturn("111222");
-        when(smsSender.verifyAccountContent("111222")).thenReturn("Code: 111222");
+        when(contentProvider.verifyAccountContent("sms", "111222")).thenReturn("Code: 111222");
 
         service.sendOtp("+9725xxxxxxx", "sms");
 
@@ -269,8 +274,8 @@ class LocalAuthServiceTest {
 
         when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.generateCode("alice@example.com", OtpPurpose.FORGOT_PASSWORD)).thenReturn("382910");
-        when(emailSender.forgotPasswordSubject()).thenReturn("Reset");
-        when(emailSender.forgotPasswordContent("382910")).thenReturn("Code: 382910");
+        when(contentProvider.forgotPasswordSubject("email")).thenReturn("Reset");
+        when(contentProvider.forgotPasswordContent("email", "382910")).thenReturn("Code: 382910");
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice"));
 

@@ -7,54 +7,15 @@ import java.util.Collections;
 
 public class EmailOtpSender implements OtpSender {
 
-    // Default plain-text template. Pass an HTML string to the constructor for rich emails.
-    public static final String DEFAULT_TEMPLATE =
-            "Hello,\n" +
-            "\n" +
-            "Your verification code is:\n" +
-            "${code}\n" +
-            "\n" +
-            "This code expires in a few minutes.\n" +
-            "\n" +
-            "Regards\n";
-
     private final MailUtils mailUtils;
-    private final String subject;
-    private final String template;
-
-    public EmailOtpSender(MailUtils mailUtils, String subject, String template) {
-        this.mailUtils = mailUtils;
-        this.subject = subject;
-        this.template = template;
-    }
 
     public EmailOtpSender(MailUtils mailUtils) {
-        this(mailUtils, "Verification Code", DEFAULT_TEMPLATE);
+        this.mailUtils = mailUtils;
     }
 
     @Override
     public String channel() {
         return "email";
-    }
-
-    @Override
-    public String verifyAccountSubject() {
-        return subject;
-    }
-
-    @Override
-    public String verifyAccountContent(String code) {
-        return template.replace("${code}", code);
-    }
-
-    @Override
-    public String forgotPasswordSubject() {
-        return subject;
-    }
-
-    @Override
-    public String forgotPasswordContent(String code) {
-        return template.replace("${code}", code);
     }
 
     @Override
