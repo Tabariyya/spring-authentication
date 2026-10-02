@@ -26,7 +26,7 @@ class EmailOtpSenderTest {
     @Test
     void send_replacesCodePlaceholderInDefaultTemplate() {
         EmailOtpSender sender = new EmailOtpSender(mailUtils);
-        sender.send("alice@example.com", "482931");
+        sender.send("alice@example.com", sender.verifyAccountSubject(), sender.verifyAccountContent("482931"));
 
         ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
         verify(mailUtils).sendEmail(any(), any(), any(), any(), bodyCaptor.capture());
@@ -38,7 +38,7 @@ class EmailOtpSenderTest {
     @Test
     void send_usesCustomTemplate() {
         EmailOtpSender sender = new EmailOtpSender(mailUtils, "Login Code", "Code: ${code} — expires soon.");
-        sender.send("alice@example.com", "111222");
+        sender.send("alice@example.com", sender.verifyAccountSubject(), sender.verifyAccountContent("111222"));
 
         ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
         verify(mailUtils).sendEmail(any(), any(), any(), any(), bodyCaptor.capture());
@@ -49,7 +49,7 @@ class EmailOtpSenderTest {
     @Test
     void send_usesConfiguredSubject() {
         EmailOtpSender sender = new EmailOtpSender(mailUtils, "My Custom Subject", "Code: ${code}");
-        sender.send("alice@example.com", "000000");
+        sender.send("alice@example.com", sender.verifyAccountSubject(), sender.verifyAccountContent("000000"));
 
         ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);
         verify(mailUtils).sendEmail(any(), any(), any(), subjectCaptor.capture(), any());
@@ -60,7 +60,7 @@ class EmailOtpSenderTest {
     @Test
     void send_deliversToCorrectRecipient() {
         EmailOtpSender sender = new EmailOtpSender(mailUtils);
-        sender.send("bob@example.com", "123456");
+        sender.send("bob@example.com", sender.verifyAccountSubject(), sender.verifyAccountContent("123456"));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<String>> toCaptor = ArgumentCaptor.forClass(List.class);

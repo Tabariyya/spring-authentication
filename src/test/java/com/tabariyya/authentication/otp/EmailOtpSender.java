@@ -38,14 +38,33 @@ public class EmailOtpSender implements OtpSender {
     }
 
     @Override
-    public void send(String recipient, String code) {
-        String body = template.replace("${code}", code);
+    public String verifyAccountSubject() {
+        return subject;
+    }
+
+    @Override
+    public String verifyAccountContent(String code) {
+        return template.replace("${code}", code);
+    }
+
+    @Override
+    public String forgotPasswordSubject() {
+        return subject;
+    }
+
+    @Override
+    public String forgotPasswordContent(String code) {
+        return template.replace("${code}", code);
+    }
+
+    @Override
+    public void send(String recipient, String subject, String content) {
         mailUtils.sendEmail(
                 Collections.singletonList(recipient),
                 new ArrayList<String>(),
                 new ArrayList<String>(),
                 subject,
-                body
+                content
         );
     }
 }

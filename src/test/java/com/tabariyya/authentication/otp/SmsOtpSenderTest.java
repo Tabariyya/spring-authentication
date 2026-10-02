@@ -34,7 +34,7 @@ class SmsOtpSenderTest {
     @Test
     void send_defaultTemplate_containsCode() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender();
-        sender.send("+9725xxxxxxx", "382910");
+        sender.send("+9725xxxxxxx", sender.verifyAccountSubject(), sender.verifyAccountContent("382910"));
 
         assertTrue(sender.lastMessage().contains("382910"));
         assertFalse(sender.lastMessage().contains("${code}"));
@@ -43,7 +43,7 @@ class SmsOtpSenderTest {
     @Test
     void send_customTemplate_replacesPlaceholder() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender("OTP: ${code}");
-        sender.send("+9725xxxxxxx", "000001");
+        sender.send("+9725xxxxxxx", sender.verifyAccountSubject(), sender.verifyAccountContent("000001"));
 
         assertEquals("OTP: 000001", sender.lastMessage());
     }
@@ -51,7 +51,7 @@ class SmsOtpSenderTest {
     @Test
     void send_deliversToCorrectNumber() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender();
-        sender.send("+9721111111", "999999");
+        sender.send("+9721111111", sender.verifyAccountSubject(), sender.verifyAccountContent("999999"));
 
         assertEquals("+9721111111", sender.lastPhone());
     }
@@ -59,8 +59,8 @@ class SmsOtpSenderTest {
     @Test
     void send_multipleCalls_eachDeliveredIndependently() {
         CapturingSmsOtpSender sender = new CapturingSmsOtpSender("Code: ${code}");
-        sender.send("+111", "111111");
-        sender.send("+222", "222222");
+        sender.send("+111", sender.verifyAccountSubject(), sender.verifyAccountContent("111111"));
+        sender.send("+222", sender.verifyAccountSubject(), sender.verifyAccountContent("222222"));
 
         assertEquals(2, sender.calls.size());
         assertEquals("Code: 111111", sender.calls.get(0)[1]);

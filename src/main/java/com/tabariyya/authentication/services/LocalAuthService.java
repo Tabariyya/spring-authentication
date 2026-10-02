@@ -65,7 +65,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
         if (sender == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         String code = otpService.generateCode(recipient, OtpPurpose.VERIFY_ACCOUNT);
-        sender.send(recipient, code);
+        sender.send(recipient, sender.verifyAccountSubject(), sender.verifyAccountContent(code));
         return ResponseEntity.noContent().build();
     }
 
@@ -79,7 +79,7 @@ public class LocalAuthService<T extends BaseUser<ID>, ID> extends BaseAuthServic
 
             String recipient = user.getContactInfo();
             String code = otpService.generateCode(recipient, OtpPurpose.FORGOT_PASSWORD);
-            sender.send(recipient, code);
+            sender.send(recipient, sender.forgotPasswordSubject(), sender.forgotPasswordContent(code));
         } else {
             // simulates send time so the caller cannot determine if the user exists
             Thread.sleep(ThreadLocalRandom.current().nextLong(1406, 1852));

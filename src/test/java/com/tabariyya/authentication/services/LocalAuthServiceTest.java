@@ -231,22 +231,25 @@ class LocalAuthServiceTest {
     @Test
     void sendOtp_emailChannel_generatesAndSends() {
         when(otpService.generateCode("alice@example.com", OtpPurpose.VERIFY_ACCOUNT)).thenReturn("482931");
+        when(emailSender.verifyAccountSubject()).thenReturn("Verify");
+        when(emailSender.verifyAccountContent("482931")).thenReturn("Code: 482931");
 
         ResponseEntity<Void> response = service.sendOtp("alice@example.com", "email");
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(emailSender).send("alice@example.com", "482931");
-        verify(smsSender, never()).send(any(), any());
+        verify(emailSender).send("alice@example.com", "Verify", "Code: 482931");
+        verify(smsSender, never()).send(any(), any(), any());
     }
 
     @Test
     void sendOtp_smsChannel_routesToSmsSender() {
         when(otpService.generateCode("+9725xxxxxxx", OtpPurpose.VERIFY_ACCOUNT)).thenReturn("111222");
+        when(smsSender.verifyAccountContent("111222")).thenReturn("Code: 111222");
 
         service.sendOtp("+9725xxxxxxx", "sms");
 
-        verify(smsSender).send("+9725xxxxxxx", "111222");
-        verify(emailSender, never()).send(any(), any());
+        verify(smsSender).send("+9725xxxxxxx", null, "Code: 111222");
+        verify(emailSender, never()).send(any(), any(), any());
     }
 
     @Test
@@ -266,11 +269,13 @@ class LocalAuthServiceTest {
 
         when(userRepository.findByIdentifier("alice")).thenReturn(Optional.of(user));
         when(otpService.generateCode("alice@example.com", OtpPurpose.FORGOT_PASSWORD)).thenReturn("382910");
+        when(emailSender.forgotPasswordSubject()).thenReturn("Reset");
+        when(emailSender.forgotPasswordContent("382910")).thenReturn("Code: 382910");
 
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("alice"));
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(emailSender).send("alice@example.com", "382910");
+        verify(emailSender).send("alice@example.com", "Reset", "Code: 382910");
     }
 
     @Test
@@ -280,7 +285,7 @@ class LocalAuthServiceTest {
         ResponseEntity<?> response = service.forgotPassword(new ForgotPasswordRequest("ghost"));
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(emailSender, never()).send(any(), any());
+        verify(emailSender, never()).send(any(), any(), any());
         verify(otpService, never()).generateCode(any(), any());
     }
 

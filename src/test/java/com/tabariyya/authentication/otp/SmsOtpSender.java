@@ -21,8 +21,28 @@ public abstract class SmsOtpSender implements OtpSender {
     }
 
     @Override
-    public void send(String recipient, String code) {
-        sendSms(recipient, template.replace("${code}", code));
+    public String verifyAccountSubject() {
+        return null;
+    }
+
+    @Override
+    public String verifyAccountContent(String code) {
+        return template.replace("${code}", code);
+    }
+
+    @Override
+    public String forgotPasswordSubject() {
+        return null;
+    }
+
+    @Override
+    public String forgotPasswordContent(String code) {
+        return template.replace("${code}", code);
+    }
+
+    @Override
+    public void send(String recipient, String subject, String content) {
+        sendSms(recipient, content);
     }
 
     // Implement this with your SMS gateway (Twilio, AWS SNS, etc.)
