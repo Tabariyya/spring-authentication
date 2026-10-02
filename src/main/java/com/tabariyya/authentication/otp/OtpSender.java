@@ -4,6 +4,6 @@ public interface OtpSender {
 
     String channel();
 
-    void send(String recipient, String code);
+    void send(String recipient, String subject, String content);
 
 }
